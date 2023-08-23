@@ -1,0 +1,41 @@
+#include<stdio.h>
+int main()
+{
+	char d[20],sd[30];
+	int i,j,count;
+	printf("enter data:");
+	scanf("%s",&d);
+	i=0;
+	j=0;
+	count=0;
+	while(d[i]!='\0')
+	{
+		sd[j]=d[i];
+		if(d[i]=='1')
+		{
+			count++;
+		}
+		else
+		{
+			count=0;
+		}
+		if(count==5)
+		{
+			sd[++j]='0';
+			count=0;
+		}
+		i++;
+		j++;
+	}
+	sd[j]='\0';
+	printf("the original data:%s",d);
+	printf("stuffed data:%s",sd);
+	return 0;
+}
+
+********************************************************************
+output:
+
+enter data:1011111100110
+the original data:1011111100110
+stuffed data:10111110100110
