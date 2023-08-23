@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+#define PORT 8080
+#define BUFFER_SIZE 1024
+int main() {
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int addrlen = sizeof(address);
+    
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("Bind failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    if (listen(server_fd, 3) < 0) {
+        perror("Listen failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+        perror("Accept failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    FILE *file = fopen("sample_file.txt", "rb");
+    if (file == NULL) {
+        perror("File not found");
+        exit(EXIT_FAILURE);
+    }
+    
+    char buffer[BUFFER_SIZE];
+    int bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        send(new_socket, buffer, bytes_read, 0);
+    }
+    
+    fclose(file);
+    close(new_socket);
+    close(server_fd);
+    
+    int client_socket;
+    struct sockaddr_in server_address;
+    
+    if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(PORT);
+    server_address.sin_addr.s_addr = INADDR_ANY;
+    
+    if (connect(client_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
+        perror("Connection failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    FILE *file = fopen("received_file.txt", "wb");
+    if (file == NULL) {
+        perror("File creation failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    char buffer[BUFFER_SIZE];
+    int bytes_received;
+    while ((bytes_received = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
+        fwrite(buffer, 1, bytes_received, file);
+    }
+    
+    fclose(file);
+    close(client_socket);
+    
+    return 0;
+}
+
+
+
+
+
+
+ 
